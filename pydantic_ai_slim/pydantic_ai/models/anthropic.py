@@ -2098,7 +2098,10 @@ def _map_usage(
     if isinstance(message, BetaMessage):
         response_usage = message.usage
     elif isinstance(message, BetaRawMessageStartEvent):
-        response_usage = message.message.usage
+        response_message = cast(Any, message).message
+        if response_message is None:
+            return existing_usage or usage.RequestUsage()
+        response_usage = response_message.usage
     elif isinstance(message, BetaRawMessageDeltaEvent):
         response_usage = message.usage
     else:
@@ -2143,11 +2146,14 @@ class AnthropicStreamedResponse(StreamedResponse):
             builtin_tool_calls: dict[str, NativeToolCallPart] = {}
             async for event in self._response:
                 if isinstance(event, BetaRawMessageStartEvent):
+                    response_message = cast(Any, event).message
+                    if response_message is None:
+                        continue
                     self._usage = _map_usage(event, self._provider_name, self._provider_url, self._model_name)
-                    self.provider_response_id = event.message.id
-                    if event.message.container:
+                    self.provider_response_id = response_message.id
+                    if response_message.container:
                         self.provider_details = self.provider_details or {}
-                        self.provider_details['container_id'] = event.message.container.id
+                        self.provider_details['container_id'] = response_message.container.id
 
                 elif isinstance(event, BetaRawContentBlockStartEvent):
                     current_block = event.content_block

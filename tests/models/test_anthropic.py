@@ -86,6 +86,7 @@ with try_import() as imports_successful:
         AsyncStream,
         omit as OMIT,
     )
+    from anthropic._models import construct_type
     from anthropic.lib.tools import BetaAbstractMemoryTool
     from anthropic.resources.beta import AsyncBeta
     from anthropic.types.beta import (
@@ -4433,6 +4434,17 @@ def test_usage(
     message_callback: Callable[[], BetaMessage | BetaRawMessageStartEvent | BetaRawMessageDeltaEvent], usage: RunUsage
 ):
     assert _map_usage(message_callback(), 'anthropic', '', 'unknown') == usage
+
+
+def test_usage_ignores_bedrock_metric_event_without_message():
+    event = construct_type(
+        value={'amazon-bedrock-invocationMetrics': {'inputTokenCount': 1}},
+        type_=BetaRawMessageStreamEvent,
+    )
+
+    assert isinstance(event, BetaRawMessageStartEvent)
+    assert event.message is None
+    assert _map_usage(event, 'anthropic', 'https://example.invalid', 'claude-opus-4-8') == RequestUsage()
 
 
 def test_streaming_usage():
