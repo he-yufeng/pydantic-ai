@@ -189,6 +189,15 @@ def test_openrouter_provider_model_profile(mocker: MockerFixture):
     assert unknown_profile.json_schema_transformer == OpenAIJsonSchemaTransformer
 
 
+def test_openrouter_provider_model_profile_without_slash():
+    provider = OpenRouterProvider(api_key='api-key')
+
+    profile = provider.model_profile('my-custom-model')
+    assert profile is not None
+    assert isinstance(profile, OpenRouterModelProfile)
+    assert profile.json_schema_transformer == OpenAIJsonSchemaTransformer
+
+
 @pytest.mark.parametrize(
     ('model_name', 'expected_flags'),
     [

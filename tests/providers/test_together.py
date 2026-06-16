@@ -98,3 +98,11 @@ def test_together_provider_model_profile(mocker: MockerFixture):
     unknown_profile = provider.model_profile('unknown/model')
     assert unknown_profile is not None
     assert unknown_profile.json_schema_transformer == OpenAIJsonSchemaTransformer
+
+
+def test_together_provider_model_profile_without_slash():
+    provider = TogetherProvider(api_key='api-key')
+
+    profile = provider.model_profile('my-custom-model')
+    assert profile is not None
+    assert profile.json_schema_transformer == OpenAIJsonSchemaTransformer
